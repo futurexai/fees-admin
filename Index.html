@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>FUTUREX AI School · Fee Manager</title>
+    <!-- html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- jsPDF for PDF download -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(145deg, #0b2e26 0%, #1b4e3f 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+        }
+
+        /* LOGIN OVERLAY */
+        #loginOverlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 12px;
+        }
+        .login-card {
+            background: white;
+            max-width: 400px;
+            width: 100%;
+            padding: 28px 20px;
+            border-radius: 36px;
+            box-shadow: 0 30px 50px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+        .login-logo {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(145deg, #004d40, #1e7b5e);
+            border-radius: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            color: white;
+            font-size: 40px;
+        }
+        .login-card h2 {
+            font-weight: 600;
+            color: #1f4037;
+            margin-bottom: 6px;
+            font-size: 1.6rem;
+        }
+        .login-card input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 50px;
+            font-size: 16px;
+            margin-bottom: 18px;
+            outline: none;
+        }
+        .login-card input:focus {
+            border-color: #004d40;
+        }
+        .login-card button {
+            background: #004d40;
+            color: white;
+            border: none;
+            padding: 14px;
+            width: 100%;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        .login-error {
+            color: #b71c1c;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        /* MAIN APP */
+        #appContainer {
+            display: none;
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        /* HEADER */
+        .app-header {
+            background: white;
+            border-radius: 32px 32px 18px 18px;
+            padding: 14px 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+        .logo-icon {
+            width: 54px;
+            height: 54px;
+            background: linear-gradient(135deg, #004d40, #2a7a62);
+            border-radius: 27px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+        .school-title h1 {
+            font-size: clamp(1.3rem, 5vw, 1.9rem);
+            font-weight: 700;
+            color: #004d40;
+            line-height: 1.2;
+        }
+        .school-title p {
+            color: #3f5a55;
+            font-size: clamp(0.7rem, 3vw, 0.9rem);
+            font-weight: 500;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .header-badge {
+            background: #f0f7f4;
+            padding: 6px 18px;
+            border-radius: 40px;
+            font-weight: 600;
+            color: #004d40;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        /* Language Toggle */
+        .lang-toggle {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .lang-btn {
+            background: transparent;
+            border: 2px solid #004d40;
+            color: #004d40;
+            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: 0.2s;
+        }
+        .lang-btn.active {
+            background: #004d40;
+            color: white;
+        }
+
+        /* QUOTE SCROLL (CSS marquee – always runs) */
+        .quote-strip {
+            background: #ffd95c;
+            color: #1b4e3f;
+            font-weight: 600;
+            font-size: clamp(0.85rem, 4vw, 1.1rem);
+            padding: 10px 0;
+            border-radius: 40px;
+            margin-bottom: 20px;
+            border: 2px solid #b8942e;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            white-space: nowrap;
+            position: relative;
+        }
+        .scroll-content {
+            display: inline-block;
+            animation: scrollMarquee 20s linear infinite;
+            padding-left: 100%;
+        }
+        .scroll-content span {
+            margin-right: 3rem;
+        }
+        @keyframes scrollMarquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
+
+        /* MAIN CARD */
+        .main-card {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(4px);
+            border-radius: 36px;
+            padding: 20px 16px;
+            box-shadow: 0 25px 40px rgba(0,0,0,0.3);
+        }
+
+        /* Software heading */
+        .software-heading {
+            background: #004d40;
+            color: white;
+            padding: 14px 24px;
+            border-radius: 60px;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 0 #002f26;
+            border: 1px solid #66b5a0;
+        }
+        .software-heading i {
+            font-size: 2rem;
+        }
+
+        .section-title {
+            font-size: clamp(1.2rem, 5vw, 1.7rem);
+            font-weight: 600;
+            color: #004d40;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Grid for student/fee/payment - adjusted for narrower student box */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 2fr; /* student 1fr, fee 2fr */
+            gap: 16px;
+        }
+        /* Payment box spans both columns */
+        .grid-2 .info-box:last-child {
+            grid-column: span 2;
+        }
+
+        /* Fee breakdown grid (inner) */
+        .fee-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 8px;
+        }
+        .fee-grid input {
+            margin-bottom: 0;
+        }
+
+        .info-box {
+            background: #f8fefb;
+            border-radius: 24px;
+            padding: 18px 14px;
+            border: 1px solid #d0e6de;
+        }
+        .info-box h3 {
+            margin-bottom: 14px;
+            color: #004d40;
+            font-weight: 600;
+            font-size: clamp(1rem, 4vw, 1.2rem);
+            border-left: 6px solid #ffb74d;
+            padding-left: 12px;
+        }
+
+        input, select {
+            background: white;
+            border: 2px solid #e2eeea;
+            border-radius: 18px;
+            padding: 12px 14px;
+            font-size: 15px;
+            width: 100%;
+            margin-bottom: 10px;
+            transition: 0.15s;
+        }
+        input:focus, select:focus {
+            border-color: #004d40;
+            box-shadow: 0 0 0 3px rgba(0,77,64,0.2);
+            outline: none;
+        }
+
+        .btn {
+            background: #004d40;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 6px 14px rgba(0,77,64,0.3);
+            transition: 0.2s;
+            border: 1px solid #35967e;
+        }
+        .btn-outline {
+            background: white;
+            color: #004d40;
+            border: 2px solid #004d40;
+            box-shadow: none;
+        }
+        .btn-outline:hover {
+            background: #e6f3ef;
+        }
+        .btn:hover {
+            background: #002f26;
+            transform: scale(1.01);
+        }
+
+        .action-bar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 24px 0 16px;
+        }
+
+        /* RECEIPT BOX */
+        #receipt {
+            width: 100%;
+            max-width: 780px;
+            margin: 16px auto;
+            padding: 20px 16px;
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 25px 35px rgba(0,0,0,0.25);
+            border: 2px solid #c0e0d6;
+            overflow-x: auto;
+        }
+        #receipt .receipt-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        #receipt .receipt-logo .logo-icon {
+            width: 50px;
+            height: 50px;
+            font-size: 30px;
+        }
+        #receipt .receipt-logo h2 {
+            color: #004d40;
+            font-size: clamp(1.2rem, 5vw, 1.8rem);
+        }
+        #receipt table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8px 0;
+            min-width: 360px;
+        }
+        #receipt td {
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+        #receipt .total-row {
+            background: #f0f7f4;
+            font-weight: 700;
+        }
+        .table-responsive {
+            overflow-x: auto;
+            margin: 10px 0;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #receiptButtons {
+            text-align: center;
+            margin: 16px 0;
+            display: none;
+        }
+
+        /* SAVED RECEIPTS */
+        .saved-section {
+            margin-top: 32px;
+            border-top: 3px dashed #9bc6ba;
+            padding-top: 24px;
+        }
+        .saved-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        #savedReceiptsContainer {
+            background: #ecf6f2;
+            border-radius: 28px;
+            padding: 16px 12px;
+            border: 1px solid #b7dfd1;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        #savedReceipts table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.05);
+            min-width: 700px;
+        }
+        #savedReceipts th {
+            background: #004d40;
+            color: white;
+            font-weight: 600;
+            padding: 10px 4px;
+            font-size: 0.8rem;
+        }
+        #savedReceipts td {
+            padding: 8px 4px;
+            border-bottom: 1px solid #cbdcd6;
+            font-size: 0.8rem;
+        }
+        #savedReceipts button {
+            background: #004d40;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 5px 10px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            margin: 2px;
+        }
+
+        /* FOOTER */
+        .footer {
+            text-align: center;
+            color: #d9f0e8;
+            margin-top: 24px;
+            font-weight: 500;
+            font-size: 0.8rem;
+            line-height: 1.6;
+        }
+        .footer a {
+            color: #ffd95c;
+            text-decoration: none;
+            margin: 0 4px;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        .footer span.sep {
+            color: #7aa89b;
+            margin: 0 6px;
+        }
+        .footer-matter {
+            background: #0b3a30;
+            padding: 16px 12px;
+            border-radius: 40px;
+            margin-top: 12px;
+            color: #c7e6db;
+            font-size: 0.75rem;
+            border: 1px solid #257a65;
+        }
+        .footer-matter p {
+            margin: 6px 0;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* ========= MOBILE LAYOUT ========= */
+        @media (max-width: 600px) {
+            /* On mobile, stack all boxes */
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            .grid-2 .info-box:last-child {
+                grid-column: span 1;
+            }
+            /* Fee inputs single column */
+            .fee-grid {
+                grid-template-columns: 1fr;
+            }
+            /* Reduce padding */
+            .info-box {
+                padding: 14px 10px;
+            }
+            input, select {
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+            .info-box h3 {
+                font-size: 1.1rem;
+                margin-bottom: 10px;
+            }
+            .action-bar .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .app-header {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+            .logo-area {
+                justify-content: center;
+            }
+            .header-badge {
+                align-self: center;
+            }
+            .lang-toggle {
+                justify-content: center;
+            }
+        }
+
+        /* Extra small devices */
+        @media (max-width: 400px) {
+            .info-box {
+                padding: 12px 8px;
+            }
+            input, select {
+                padding: 8px 10px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- LOGIN MODAL -->
+<div id="loginOverlay">
+    <div class="login-card">
+        <div class="login-logo">🏫</div>
+        <h2 id="loginTitle">🔐 Admin Access</h2>
+        <p style="color:#2d5a4c;" id="loginSubtitle">FUTUREX AI School · Fees</p>
+        <input type="password" id="passwordInput" placeholder="Enter password" autofocus>
+        <button id="loginBtn"><i class="fas fa-arrow-right-to-bracket"></i> <span id="loginBtnText">Enter</span></button>
+        <div id="loginError" class="login-error"></div>
+        <div style="margin-top: 16px; font-size: 13px; color: #5f736e;">(default: admin123)</div>
+    </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="appContainer">
+
+    <!-- Header -->
+    <div class="app-header">
+        <div class="logo-area">
+            <div class="logo-icon">🏫</div>
+            <div class="school-title">
+                <h1>FUTUREX AI School</h1>
+                <p><i class="fas fa-map-pin"></i> Jagatpura, Jaipur · +91 7339752260 · info@futurexai.com</p>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="header-badge"><i class="fas fa-file-invoice"></i> <span id="feeManagerBadge">Fee Manager</span></div>
+            <div class="lang-toggle">
+                <button class="lang-btn active" id="langEn" onclick="setLanguage('en')">EN</button>
+                <button class="lang-btn" id="langHi" onclick="setLanguage('hi')">हि</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scrolling quotes (CSS marquee - always running) -->
+    <div class="quote-strip">
+        <div class="scroll-content" id="scrollContent">
+            <span id="quote1">🌱 Education is the passport to the future, for tomorrow belongs to those who prepare for it today.</span>
+            <span id="quote2">🔮 The beautiful thing about learning is that it builds bridges to tomorrow.</span>
+            <span id="quote3">🚀 Knowledge is the fuel that powers the journey ahead.</span>
+            <span id="quote4">💡 Invest in education — it yields the highest returns in life.</span>
+            <span id="quote5">📚 Learning is a treasure that will follow its owner everywhere.</span>
+        </div>
+    </div>
+
+    <!-- main card -->
+    <div class="main-card">
+
+        <!-- Software heading -->
+        <div class="software-heading">
+            <i class="fas fa-calculator"></i> 
+            <span id="softwareTitle">FEES MANAGER</span>
+        </div>
+
+        <!-- Form Section -->
+        <div id="formSection">
+            <div class="section-title"><i class="fas fa-pen-alt"></i> <span id="newReceiptTitle">New fee receipt</span></div>
+            <div class="grid-2">
+                <!-- Student details (narrower) -->
+                <div class="info-box">
+                    <h3><i class="fas fa-user-graduate"></i> <span id="studentHeading">Student</span></h3>
+                    <input type="text" id="studentName" placeholder="Full name" data-en="Full name" data-hi="पूरा नाम">
+                    <input type="text" id="registrationNumber" placeholder="Registration number" data-en="Registration number" data-hi="पंजीकरण संख्या">
+                    <input type="text" id="fatherName" placeholder="Father's name" data-en="Father's name" data-hi="पिता का नाम">
+                    <input type="text" id="mobile" placeholder="Mobile" data-en="Mobile" data-hi="मोबाइल">
+                    <select id="className" data-en="Select class" data-hi="कक्षा चुनें">
+                        <option value="" id="defaultClassOption">Select class</option>
+                        <option>Nursery</option><option>LKG</option><option>UKG</option>
+                        <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+                        <option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option>
+                    </select>
+                </div>
+                <!-- Fee details (wider) -->
+                <div class="info-box">
+                    <h3><i class="fas fa-coins"></i> <span id="feeHeading">Fee breakdown</span></h3>
+                    <div class="fee-grid">
+                        <input type="number" id="tuition" placeholder="Tuition fee" data-en="Tuition fee" data-hi="ट्यूशन फीस">
+                        <input type="number" id="admission" placeholder="Admission fee" data-en="Admission fee" data-hi="प्रवेश शुल्क">
+                        <input type="number" id="development" placeholder="Development fee" data-en="Development fee" data-hi="विकास शुल्क">
+                        <input type="number" id="exam" placeholder="Exam fee" data-en="Exam fee" data-hi="परीक्षा शुल्क">
+                        <input type="number" id="library" placeholder="Library fee" data-en="Library fee" data-hi="पुस्तकालय शुल्क">
+                        <input type="number" id="sports" placeholder="Sports fee" data-en="Sports fee" data-hi="खेल शुल्क">
+                        <input type="number" id="transport" placeholder="Transport fee" data-en="Transport fee" data-hi="परिवहन शुल्क">
+                        <input type="number" id="lab" placeholder="Lab fee" data-en="Lab fee" data-hi="प्रयोगशाला शुल्क">
+                        <input type="number" id="computer" placeholder="Computer fee" data-en="Computer fee" data-hi="कंप्यूटर शुल्क">
+                        <input type="number" id="activity" placeholder="Activity fee" data-en="Activity fee" data-hi="गतिविधि शुल्क">
+                        <input type="number" id="caution" placeholder="Caution money" data-en="Caution money" data-hi="जमानत राशि">
+                        <input type="number" id="uniform" placeholder="Uniform fee" data-en="Uniform fee" data-hi="वर्दी शुल्क">
+                    </div>
+                </div>
+                <!-- Payment details (full width) -->
+                <div class="info-box">
+                    <h3><i class="fas fa-credit-card"></i> <span id="paymentHeading">Payment</span></h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 10px;">
+                        <select id="mode">
+                            <option>Cash</option><option>UPI</option><option>Bank Transfer</option>
+                        </select>
+                        <input type="date" id="duedate" placeholder="Due date">
+                        <input type="number" id="paid" placeholder="Amount paid" data-en="Amount paid" data-hi="भुगतान राशि">
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-bar">
+                <button class="btn" onclick="generateReceipt()"><i class="fas fa-file-invoice"></i> <span id="generateBtn">Generate receipt</span></button>
+                <button class="btn-outline" onclick="resetForm()"><i class="fas fa-undo-alt"></i> <span id="clearBtn">Clear fields</span></button>
+                <button class="btn-outline" id="toggleSavedBtn"><i class="fas fa-folder-open"></i> <span id="showSavedBtn">Show saved receipts</span></button>
+            </div>
+        </div>
+
+        <!-- receipt preview area -->
+        <div id="receipt"></div>
+        <div id="receiptButtons">
+            <button class="btn" onclick="downloadReceipt()"><i class="fas fa-download"></i> <span id="downloadBtn">Download PNG</span></button>
+            <button class="btn-outline" onclick="downloadPDF()"><i class="fas fa-file-pdf"></i> <span id="pdfBtn">Download PDF</span></button>
+            <button class="btn-outline" onclick="sendWhatsApp()"><i class="fab fa-whatsapp"></i> <span id="whatsappBtn">WhatsApp</span></button>
+            <button class="btn-outline" onclick="toggleFormView()"><i class="fas fa-plus-circle"></i> <span id="newBtn">New receipt</span></button>
+        </div>
+
+        <!-- saved receipts section -->
+        <div id="savedSection" class="saved-section hidden">
+            <div class="saved-header">
+                <h2 style="color:#004d40;"><i class="fas fa-archive"></i> <span id="savedTitle">Saved receipts</span></h2>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn-outline" onclick="displaySavedReceipts()"><i class="fas fa-sync-alt"></i> <span id="refreshBtn">Refresh</span></button>
+                    <button class="btn-outline" onclick="downloadExcel()"><i class="fas fa-file-excel"></i> <span id="excelBtn">Download Excel</span></button>
+                </div>
+            </div>
+            <div id="savedReceiptsContainer">
+                <div id="savedReceipts"></div>
+            </div>
+        </div>
+
+    </div> <!-- main-card -->
+
+    <!-- FOOTER -->
+    <div class="footer">
+        <div>© 2026 FUTUREX AI School 
+            <span class="sep">|</span> <a href="#" id="privacyLink">Privacy Policy</a> 
+            <span class="sep">|</span> <a href="#" id="disclaimerLink">Disclaimer</a> 
+            <span class="sep">|</span> <a href="#" id="securityLink">Security</a> 
+            <span class="sep">|</span> <a href="#" id="aboutLink">About Us</a>
+        </div>
+        <div class="footer-matter" id="footerMatter">
+            <p id="privacyText"><strong>Privacy Policy:</strong> We do not store any personal data on servers. All information is saved locally in your browser. We respect your privacy.</p>
+            <p id="disclaimerText"><strong>Disclaimer:</strong> This tool is for internal use only. The school is not responsible for any data loss. Use at your own discretion.</p>
+            <p id="securityText"><strong>Security:</strong> Data is stored encrypted locally. No external transmission. Always log out after use.</p>
+            <p id="aboutText"><strong>About Us:</strong> FUTUREX AI School, Jagatpura, Jaipur. Imparting quality education with modern tools. Contact: info@futurexai.com</p>
+        </div>
+    </div>
+</div> <!-- appContainer -->
+
+<script>
+    (function() {
+        // ---------- LANGUAGE STRINGS ----------
+        const langStrings = {
+            en: {
+                loginTitle: "🔐 Admin Access",
+                loginSubtitle: "FUTUREX AI School · Fees",
+                loginBtnText: "Enter",
+                feeManagerBadge: "Fee Manager",
+                softwareTitle: "FEES MANAGER",
+                newReceiptTitle: "New fee receipt",
+                studentHeading: "Student",
+                feeHeading: "Fee breakdown",
+                paymentHeading: "Payment",
+                generateBtn: "Generate receipt",
+                clearBtn: "Clear fields",
+                showSavedBtn: "Show saved receipts",
+                downloadBtn: "Download PNG",
+                pdfBtn: "Download PDF",
+                whatsappBtn: "WhatsApp",
+                newBtn: "New receipt",
+                savedTitle: "Saved receipts",
+                refreshBtn: "Refresh",
+                excelBtn: "Download Excel",
+                quote1: "🌱 Education is the passport to the future, for tomorrow belongs to those who prepare for it today.",
+                quote2: "🔮 The beautiful thing about learning is that it builds bridges to tomorrow.",
+                quote3: "🚀 Knowledge is the fuel that powers the journey ahead.",
+                quote4: "💡 Invest in education — it yields the highest returns in life.",
+                quote5: "📚 Learning is a treasure that will follow its owner everywhere.",
+                privacyText: "Privacy Policy: We do not store any personal data on servers. All information is saved locally in your browser. We respect your privacy.",
+                disclaimerText: "Disclaimer: This tool is for internal use only. The school is not responsible for any data loss. Use at your own discretion.",
+                securityText: "Security: Data is stored encrypted locally. No external transmission. Always log out after use.",
+                aboutText: "About Us: FUTUREX AI School, Jagatpura, Jaipur. Imparting quality education with modern tools. Contact: info@futurexai.com",
+            },
+            hi: {
+                loginTitle: "🔐 व्यवस्थापक पहुंच",
+                loginSubtitle: "फ्यूचरेक्स एआई स्कूल · फीस",
+                loginBtnText: "प्रवेश करें",
+                feeManagerBadge: "फीस प्रबंधक",
+                softwareTitle: "फीस प्रबंधक",
+                newReceiptTitle: "नई फीस रसीद",
+                studentHeading: "छात्र",
+                feeHeading: "फीस विवरण",
+                paymentHeading: "भुगतान",
+                generateBtn: "रसीद बनाएं",
+                clearBtn: "खेत साफ़ करें",
+                showSavedBtn: "सेव की गई रसीदें",
+                downloadBtn: "डाउनलोड PNG",
+                pdfBtn: "डाउनलोड PDF",
+                whatsappBtn: "व्हाट्सएप",
+                newBtn: "नई रसीद",
+                savedTitle: "सेव की गई रसीदें",
+                refreshBtn: "ताज़ा करें",
+                excelBtn: "एक्सेल डाउनलोड",
+                quote1: "🌱 शिक्षा भविष्य का पासपोर्ट है, क्योंकि कल उन्हीं का होता है जो आज उसकी तैयारी करते हैं।",
+                quote2: "🔮 सीखने की सुंदरता यह है कि यह कल के लिए पुल बनाती है।",
+                quote3: "🚀 ज्ञान वह ईंधन है जो आगे की यात्रा को शक्ति देता है।",
+                quote4: "💡 शिक्षा में निवेश करें — यह जीवन में सबसे अधिक लाभ देता है।",
+                quote5: "📚 सीखना एक खजाना है जो अपने मालिक का हर जगह पीछा करेगा।",
+                privacyText: "गोपनीयता नीति: हम कोई व्यक्तिगत डेटा सर्वर पर संग्रहीत नहीं करते। सभी जानकारी आपके ब्राउज़र में स्थानीय रूप से सहेजी जाती है। हम आपकी गोपनीयता का सम्मान करते हैं।",
+                disclaimerText: "अस्वीकरण: यह उपकरण केवल आंतरिक उपयोग के लिए है। किसी भी डेटा हानि के लिए स्कूल जिम्मेदार नहीं है। अपने विवेक से उपयोग करें।",
+                securityText: "सुरक्षा: डेटा स्थानीय रूप से एन्क्रिप्टेड संग्रहीत किया जाता है। कोई बाहरी प्रसारण नहीं। उपयोग के बाद हमेशा लॉग आउट करें।",
+                aboutText: "हमारे बारे में: फ्यूचरेक्स एआई स्कूल, जगतपुरा, जयपुर। आधुनिक उपकरणों के साथ गुणवत्तापूर्ण शिक्षा प्रदान करना। संपर्क: info@futurexai.com",
+            }
+        };
+
+        let currentLang = 'en';
+
+        window.setLanguage = function(lang) {
+            currentLang = lang;
+            const s = langStrings[lang];
+            document.getElementById('loginTitle').innerText = s.loginTitle;
+            document.getElementById('loginSubtitle').innerText = s.loginSubtitle;
+            document.getElementById('loginBtnText').innerText = s.loginBtnText;
+            document.getElementById('feeManagerBadge').innerText = s.feeManagerBadge;
+            document.getElementById('softwareTitle').innerText = s.softwareTitle;
+            document.getElementById('newReceiptTitle').innerText = s.newReceiptTitle;
+            document.getElementById('studentHeading').innerText = s.studentHeading;
+            document.getElementById('feeHeading').innerText = s.feeHeading;
+            document.getElementById('paymentHeading').innerText = s.paymentHeading;
+            document.getElementById('generateBtn').innerText = s.generateBtn;
+            document.getElementById('clearBtn').innerText = s.clearBtn;
+            document.getElementById('showSavedBtn').innerText = s.showSavedBtn;
+            document.getElementById('downloadBtn').innerText = s.downloadBtn;
+            document.getElementById('pdfBtn').innerText = s.pdfBtn;
+            document.getElementById('whatsappBtn').innerText = s.whatsappBtn;
+            document.getElementById('newBtn').innerText = s.newBtn;
+            document.getElementById('savedTitle').innerText = s.savedTitle;
+            document.getElementById('refreshBtn').innerText = s.refreshBtn;
+            document.getElementById('excelBtn').innerText = s.excelBtn;
+
+            document.getElementById('quote1').innerText = s.quote1;
+            document.getElementById('quote2').innerText = s.quote2;
+            document.getElementById('quote3').innerText = s.quote3;
+            document.getElementById('quote4').innerText = s.quote4;
+            document.getElementById('quote5').innerText = s.quote5;
+
+            document.getElementById('privacyText').innerHTML = `<strong>${lang === 'en' ? 'Privacy Policy' : 'गोपनीयता नीति'}:</strong> ${s.privacyText}`;
+            document.getElementById('disclaimerText').innerHTML = `<strong>${lang === 'en' ? 'Disclaimer' : 'अस्वीकरण'}:</strong> ${s.disclaimerText}`;
+            document.getElementById('securityText').innerHTML = `<strong>${lang === 'en' ? 'Security' : 'सुरक्षा'}:</strong> ${s.securityText}`;
+            document.getElementById('aboutText').innerHTML = `<strong>${lang === 'en' ? 'About Us' : 'हमारे बारे में'}:</strong> ${s.aboutText}`;
+
+            document.querySelectorAll('input[data-en], select[data-en]').forEach(el => {
+                if (el.tagName === 'SELECT') {
+                    if (el.options[0] && !el.options[0].value) {
+                        el.options[0].text = lang === 'en' ? el.dataset.en : el.dataset.hi;
+                    }
+                } else {
+                    el.placeholder = lang === 'en' ? el.dataset.en : el.dataset.hi;
+                }
+            });
+
+            const modeSelect = document.getElementById('mode');
+            if (lang === 'hi') {
+                modeSelect.options[0].text = 'नकद';
+                modeSelect.options[1].text = 'यूपीआई';
+                modeSelect.options[2].text = 'बैंक हस्तांतरण';
+            } else {
+                modeSelect.options[0].text = 'Cash';
+                modeSelect.options[1].text = 'UPI';
+                modeSelect.options[2].text = 'Bank Transfer';
+            }
+
+            document.getElementById('langEn').classList.toggle('active', lang === 'en');
+            document.getElementById('langHi').classList.toggle('active', lang === 'hi');
+        };
+
+        // ---------- ADMIN LOGIN ----------
+        const loginOverlay = document.getElementById('loginOverlay');
+        const appContainer = document.getElementById('appContainer');
+        const loginBtn = document.getElementById('loginBtn');
+        const passwordInput = document.getElementById('passwordInput');
+        const loginError = document.getElementById('loginError');
+
+        function checkPassword() {
+            if (passwordInput.value === 'admin123') {
+                loginOverlay.style.display = 'none';
+                appContainer.style.display = 'block';
+                displaySavedReceipts();
+                setLanguage(currentLang);
+            } else {
+                loginError.innerText = currentLang === 'en' ? 'Incorrect password. Try admin123' : 'गलत पासवर्ड। admin123 आज़माएं';
+                passwordInput.value = '';
+                passwordInput.focus();
+            }
+        }
+        loginBtn.addEventListener('click', checkPassword);
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkPassword();
+        });
+
+        // ---------- STORAGE ----------
+        if (!localStorage.getItem('receipts')) {
+            localStorage.setItem('receipts', JSON.stringify([]));
+        }
+
+        // ---------- TOGGLE SAVED RECEIPTS ----------
+        const toggleSavedBtn = document.getElementById('toggleSavedBtn');
+        const savedSection = document.getElementById('savedSection');
+
+        toggleSavedBtn.addEventListener('click', () => {
+            savedSection.classList.toggle('hidden');
+            if (!savedSection.classList.contains('hidden')) {
+                displaySavedReceipts();
+                toggleSavedBtn.innerHTML = '<i class="fas fa-folder-open"></i> ' + (currentLang === 'en' ? 'Hide saved receipts' : 'सेव की गई रसीदें छुपाएं');
+            } else {
+                toggleSavedBtn.innerHTML = '<i class="fas fa-folder-open"></i> ' + (currentLang === 'en' ? 'Show saved receipts' : 'सेव की गई रसीदें दिखाएं');
+            }
+        });
+
+        // ---------- HELPER FUNCTIONS ----------
+        function val(id) { return parseFloat(document.getElementById(id).value) || 0; }
+
+        window.toggleFormView = function() {
+            document.getElementById('formSection').style.display = 'block';
+            document.getElementById('receipt').style.display = 'none';
+            document.getElementById('receiptButtons').style.display = 'none';
+        };
+
+        window.resetForm = function() {
+            document.querySelectorAll('#formSection input, #formSection select').forEach(el => {
+                if (el.type !== 'select-one') el.value = '';
+                else el.selectedIndex = 0;
+            });
+        };
+
+        // Display saved receipts in table
+        window.displaySavedReceipts = function() {
+            let receipts = JSON.parse(localStorage.getItem('receipts')) || [];
+            let displayed = [...receipts].reverse();
+            let html = '<table><tr><th>Receipt No</th><th>Student</th><th>Reg No</th><th>Class</th><th>Total</th><th>Paid</th><th>Due</th><th>Date</th><th>Actions</th></tr>';
+            for (let i = 0; i < displayed.length; i++) {
+                let r = displayed[i];
+                let originalIndex = receipts.length - 1 - i;
+                html += `<tr>
+                    <td>${r.receiptNo}</td>
+                    <td>${r.student.name}</td>
+                    <td>${r.student.registration}</td>
+                    <td>${r.student.class}</td>
+                    <td>₹${r.total}</td>
+                    <td>₹${r.paid}</td>
+                    <td>₹${r.due}</td>
+                    <td>${r.date}</td>
+                    <td>
+                        <button onclick="viewSavedReceipt(${originalIndex})"><i class="fas fa-eye"></i> View</button>
+                        <button onclick="deleteReceipt(${originalIndex})" style="background:#b71c1c;"><i class="fas fa-trash-alt"></i> Del</button>
+                    </td>
+                </tr>`;
+            }
+            html += '</table>';
+            document.getElementById('savedReceipts').innerHTML = html || '<p style="padding:20px;">No receipts saved yet.</p>';
+        };
+
+        window.deleteReceipt = function(index) {
+            if (!confirm('Delete this receipt permanently?')) return;
+            let receipts = JSON.parse(localStorage.getItem('receipts'));
+            receipts.splice(index, 1);
+            localStorage.setItem('receipts', JSON.stringify(receipts));
+            displaySavedReceipts();
+        };
+
+        // View a saved receipt (reconstruct with school logo 🏫)
+        window.viewSavedReceipt = function(index) {
+            let receipts = JSON.parse(localStorage.getItem('receipts'));
+            let r = receipts[index];
+            if (!r) return;
+
+            let feeRows = '';
+            for (const [key, value] of Object.entries(r.fees)) {
+                if (value > 0) {
+                    const feeName = key.charAt(0).toUpperCase() + key.slice(1);
+                    feeRows += `<tr><td data-label="${feeName}:">${feeName}:</td><td>₹${value}</td></tr>`;
+                }
+            }
+
+            let html = `
+                <div class="receipt-logo">
+                    <div class="logo-icon">🏫</div>
+                    <h2>FUTUREX AI School</h2>
+                </div>
+                <div style="text-align:center; color:#2d4e45; margin-bottom:14px; font-size:0.85rem;">
+                    Jagatpura, Jaipur · +91 7339752260 · info@futurexai.com
+                </div>
+                <hr>
+                <div class="table-responsive"><table>
+                    <tr><td data-label="Receipt No:">Receipt No:</td><td>${r.receiptNo}</td></tr>
+                    <tr><td data-label="Date:">Date:</td><td>${r.date}</td></tr>
+                </table></div>
+                <hr><b>Student Details</b>
+                <div class="table-responsive"><table>
+                    <tr><td>Name:</td><td>${r.student.name}</td></tr>
+                    <tr><td>Registration:</td><td>${r.student.registration}</td></tr>
+                    <tr><td>Father:</td><td>${r.student.father}</td></tr>
+                    <tr><td>Class:</td><td>${r.student.class}</td></tr>
+                    <tr><td>Mobile:</td><td>${r.student.mobile}</td></tr>
+                </table></div>
+                <hr><b>Fee Bifurcation</b>
+                <div class="table-responsive"><table>${feeRows}</table></div>
+                <hr>
+                <div class="table-responsive"><table>
+                    <tr class="total-row"><td>Total:</td><td>₹${r.total}</td></tr>
+                    <tr class="total-row"><td>Paid:</td><td>₹${r.paid}</td></tr>
+                    <tr class="total-row"><td>Due:</td><td>₹${r.due}</td></tr>
+                </table></div>
+                <hr>
+                <div class="table-responsive"><table>
+                    <tr><td>Payment Mode:</td><td>${r.mode}</td></tr>
+                    <tr><td>Due Date:</td><td>${r.duedate}</td></tr>
+                </table></div>
+                <hr>
+                <div style="text-align:right; font-style:italic;">Authorized Signature</div>
+            `;
+
+            document.getElementById('receipt').innerHTML = html;
+            document.getElementById('receipt').style.display = 'block';
+            document.getElementById('receiptButtons').style.display = 'block';
+            document.getElementById('formSection').style.display = 'none';
+            window.currentSavedMobile = r.student.mobile;
+        };
+
+        // Generate new receipt
+        window.generateReceipt = function() {
+            const studentName = document.getElementById('studentName').value.trim();
+            const registrationNumber = document.getElementById('registrationNumber').value.trim();
+            const fatherName = document.getElementById('fatherName').value.trim();
+            const mobile = document.getElementById('mobile').value.trim();
+            const className = document.getElementById('className').value;
+            const mode = document.getElementById('mode').value;
+            const duedate = document.getElementById('duedate').value;
+
+            if (!studentName || !registrationNumber || !fatherName || !mobile || !className) {
+                alert(currentLang === 'en' ? 'Please fill all student details (including registration number)' : 'कृपया सभी छात्र विवरण भरें (पंजीकरण संख्या सहित)');
+                return;
+            }
+
+            const fees = {
+                tuition: val('tuition'), admission: val('admission'), development: val('development'),
+                exam: val('exam'), library: val('library'), sports: val('sports'),
+                transport: val('transport'), lab: val('lab'), computer: val('computer'),
+                activity: val('activity'), caution: val('caution'), uniform: val('uniform')
+            };
+            let total = Object.values(fees).reduce((a,b) => a+b, 0);
+            let paid = val('paid');
+            let due = total - paid;
+            let receiptNo = `FX/${registrationNumber}`;
+            let today = new Date().toLocaleDateString('en-GB');
+
+            let feeRows = '';
+            for (const [key, value] of Object.entries(fees)) {
+                if (value > 0) {
+                    const feeName = key.charAt(0).toUpperCase() + key.slice(1);
+                    feeRows += `<tr><td data-label="${feeName}:">${feeName}:</td><td>₹${value}</td></tr>`;
+                }
+            }
+
+            let html = `
+                <div class="receipt-logo">
+                    <div class="logo-icon">🏫</div>
+                    <h2>FUTUREX AI School</h2>
+                </div>
+                <div style="text-align:center; color:#2d4e45; margin-bottom:14px; font-size:0.85rem;">
+                    Jagatpura, Jaipur · +91 7339752260 · info@futurexai.com
+                </div>
+                <hr>
+                <div class="table-responsive"><table>
+                    <tr><td data-label="Receipt No:">Receipt No:</td><td>${receiptNo}</td></tr>
+                    <tr><td data-label="Date:">Date:</td><td>${today}</td></tr>
+                </table></div>
+                <hr><b>Student Details</b>
+                <div class="table-responsive"><table>
+                    <tr><td>Name:</td><td>${studentName}</td></tr>
+                    <tr><td>Registration:</td><td>${registrationNumber}</td></tr>
+                    <tr><td>Father:</td><td>${fatherName}</td></tr>
+                    <tr><td>Class:</td><td>${className}</td></tr>
+                    <tr><td>Mobile:</td><td>${mobile}</td></tr>
+                </table></div>
+                <hr><b>Fee Bifurcation</b>
+                <div class="table-responsive"><table>${feeRows}</table></div>
+                <hr>
+                <div class="table-responsive"><table>
+                    <tr class="total-row"><td>Total:</td><td>₹${total}</td></tr>
+                    <tr class="total-row"><td>Paid:</td><td>₹${paid}</td></tr>
+                    <tr class="total-row"><td>Due:</td><td>₹${due}</td></tr>
+                </table></div>
+                <hr>
+                <div class="table-responsive"><table>
+                    <tr><td>Payment Mode:</td><td>${mode}</td></tr>
+                    <tr><td>Due Date:</td><td>${duedate}</td></tr>
+                </table></div>
+                <hr>
+                <div style="text-align:right; font-style:italic;">Authorized Signature</div>
+            `;
+
+            document.getElementById('receipt').innerHTML = html;
+            document.getElementById('receipt').style.display = 'block';
+            document.getElementById('receiptButtons').style.display = 'block';
+            document.getElementById('formSection').style.display = 'none';
+
+            let receipts = JSON.parse(localStorage.getItem('receipts'));
+            receipts.push({
+                receiptNo, date: today,
+                student: { name: studentName, registration: registrationNumber, father: fatherName, mobile, class: className },
+                fees, total, paid, due, mode, duedate
+            });
+            localStorage.setItem('receipts', JSON.stringify(receipts));
+            displaySavedReceipts();
+            window.currentSavedMobile = mobile;
+        };
+
+        // Download receipt as PNG
+        window.downloadReceipt = function() {
+            html2canvas(document.getElementById('receipt')).then(canvas => {
+                let link = document.createElement('a');
+                link.download = 'receipt.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            });
+        };
+
+        // Download receipt as PDF using html2canvas + jsPDF
+        window.downloadPDF = function() {
+            const receipt = document.getElementById('receipt');
+            html2canvas(receipt, { scale: 2 }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'px',
+                    format: [canvas.width * 0.75, canvas.height * 0.75] // roughly A4ish
+                });
+                pdf.addImage(imgData, 'PNG', 10, 10, canvas.width * 0.75 - 20, canvas.height * 0.75 - 20);
+                pdf.save('receipt.pdf');
+            });
+        };
+
+        // WhatsApp (text)
+        window.sendWhatsApp = function() {
+            let mobile = window.currentSavedMobile || document.getElementById('mobile').value;
+            if (!mobile) { alert('No mobile number'); return; }
+            let msg = document.getElementById('receipt').innerText || document.getElementById('receipt').textContent;
+            window.open(`https://wa.me/91${mobile}?text=${encodeURIComponent(msg)}`);
+        };
+
+        // Download Excel (CSV) from saved receipts
+        window.downloadExcel = function() {
+            let receipts = JSON.parse(localStorage.getItem('receipts')) || [];
+            if (receipts.length === 0) {
+                alert('No receipts to export');
+                return;
+            }
+            // Headers
+            let csv = "Receipt No,Student,Registration No,Father's Name,Class,Mobile,Total,Paid,Due,Due Date,Payment Mode,Date\n";
+            receipts.forEach(r => {
+                csv += `"${r.receiptNo}","${r.student.name}","${r.student.registration}","${r.student.father}","${r.student.class}","${r.student.mobile}",${r.total},${r.paid},${r.due},"${r.duedate}","${r.mode}","${r.date}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'saved_receipts.csv';
+            link.click();
+        };
+
+        // initial load
+        displaySavedReceipts();
+        setLanguage('en');
+    })();
+</script>
+
+</body>
+</html>
